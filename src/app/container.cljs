@@ -6,11 +6,12 @@
             [phlox.complex :as complex]
             [phlox.comp.drag-point :refer [comp-drag-point]]
             [phlox.comp.slider :refer [comp-slider]]
+            [phlox.comp.switch :refer [comp-switch]]
             ["pixi.js" :as PIXI]
-            ["d3-color" :refer [hcl]]
+            ["d3-color" :refer [hcl hsl]]
             ["copy-to-clipboard" :as copy!]))
 
-(defn hcl-color [h c l]
+(defn hcl-color [h c l hsl?]
   (comment js-debugger)
   (comment
    println
@@ -20,9 +21,10 @@
    (hcl h c l)
    (.toString (hcl h c l))
    (PIXI/utils.string2hex (.formatHex (hcl h c l))))
-  {:hex (PIXI/utils.string2hex (.formatHex (hcl h c l))),
-   :hex-string (.formatHex (hcl h c l)),
-   :rgb (.formatRgb (hcl h c l))})
+  (let [color (if hsl? (hsl h (* 0.01 c) (* 0.01 l)) (hcl h c l))]
+    {:hex (PIXI/utils.string2hex (.formatHex color)),
+     :hex-string (.formatHex color),
+     :rgb (.formatRgb color)}))
 
 (defcomp
  comp-container
@@ -37,8 +39,17 @@
                   :delta 3,
                   :center [600 600],
                   :c 100,
-                  :l 80})
-       {hue-unit :hue-unit, n :n, r1 :r1, r0 :r0, delta :delta, center :center, c :c, l :l} state]
+                  :l 80,
+                  :hsl? false})
+       {hue-unit :hue-unit,
+        n :n,
+        r1 :r1,
+        r0 :r0,
+        delta :delta,
+        center :center,
+        c :c,
+        l :l,
+        hsl? :hsl?} state]
    (container
     {}
     (create-list
@@ -55,7 +66,7 @@
                                  (* (+ r0 (* idx delta)) (js/Math.sin angle))
                                  0]
                                 center))
-                    color (hcl-color (* hue-unit idx) c l)]
+                    color (hcl-color (* hue-unit idx) c l hsl?)]
                 (container
                  {:position position}
                  (circle
@@ -132,4 +143,9 @@
       :position [660 70],
       :round? true,
       :title "l 亮度",
-      :on-change (fn [value d!] (d! cursor (assoc state :l value)))}))))
+      :on-change (fn [value d!] (d! cursor (assoc state :l value)))})
+    (comp-switch
+     {:value hsl?,
+      :position [800 20],
+      :title "HSL",
+      :on-change (fn [v d!] (d! cursor (assoc state :hsl? v)))}))))
