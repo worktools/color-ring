@@ -21,6 +21,7 @@
     "shadow-cljs": "^2.10.13"
   },
   "dependencies": {
+    "copy-to-clipboard": "^3.3.1",
     "d3-color": "^1.4.1",
     "fontfaceobserver": "^2.1.0",
     "pixi.js": "^5.3.0",
