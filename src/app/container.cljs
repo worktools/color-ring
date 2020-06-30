@@ -7,7 +7,8 @@
             [phlox.comp.drag-point :refer [comp-drag-point]]
             [phlox.comp.slider :refer [comp-slider]]
             ["pixi.js" :as PIXI]
-            ["d3-color" :refer [hcl]]))
+            ["d3-color" :refer [hcl]]
+            ["copy-to-clipboard" :as copy!]))
 
 (defn hcl-color [h c l]
   (comment js-debugger)
@@ -57,7 +58,11 @@
                     color (hcl-color (* hue-unit idx) c l)]
                 (container
                  {:position position}
-                 (circle {:position [0 0], :radius r1, :fill (do (:hex color))})
+                 (circle
+                  {:position [0 0],
+                   :radius r1,
+                   :fill (do (:hex color)),
+                   :on {:pointertap (fn [e d!] (copy! (:hex-string color)))}})
                  (text
                   {:position [-10 20],
                    :text (:hex-string color),
