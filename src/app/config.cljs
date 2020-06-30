@@ -17,7 +17,7 @@
 (def site
   {:dev-ui "http://localhost:8100/main-fonts.css",
    :release-ui "http://cdn.tiye.me/favored-fonts/main-fonts.css",
-   :cdn-url "http://cdn.tiye.me/phlox-workflow/",
-   :title "Phlox",
+   :cdn-url "http://cdn.tiye.me/color-ring/",
+   :title "Color Ring",
    :icon "http://cdn.tiye.me/logo/quamolit.png",
-   :storage-key "phlox-workflow"})
+   :storage-key "color-ring"})
