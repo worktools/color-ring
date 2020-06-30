@@ -1,0 +1,28 @@
+{
+  "name": "phlox",
+  "version": "0.1.0",
+  "description": "a PIXI DSL in ClojureScript",
+  "main": "index.js",
+  "scripts": {
+    "watch": "shadow-cljs watch client test",
+    "build-cdn": "shadow-cljs clj-run build.main/build-cdn",
+    "build": "shadow-cljs clj-run build.main/build",
+    "up": "yarn build-cdn && tiye-up",
+    "page": "shadow-cljs clj-run build.main/page",
+    "ln": "cd target && rm -f entry && ln -s ../entry"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:mvc-works/calcit-workflow.git"
+  },
+  "author": "jiyinyiyong",
+  "license": "MIT",
+  "devDependencies": {
+    "shadow-cljs": "^2.10.13"
+  },
+  "dependencies": {
+    "fontfaceobserver": "^2.1.0",
+    "pixi.js": "^5.3.0",
+    "shortid": "^2.2.15"
+  }
+}
