@@ -44,7 +44,7 @@
                 cursor $ []
                 state $ or (:data states)
                   {} (:hue-unit 12) (:n 120) (:r0 50) (:r1 20) (:delta 3)
-                    :center $ [] 600 600
+                    :center $ [] 0 0
                     :c 100
                     :l 80
                     :hsl? false
@@ -90,51 +90,51 @@
                       d! cursor $ assoc state :center position
                 comp-slider (>> states :r0)
                   {} (:value r0) (:unit 1) (:min 10)
-                    :position $ [] 100 20
+                    :position $ [] -300 -280
                     :on-change $ fn (value d!)
                       d! cursor $ assoc state :r0 value
                     :title "\"r0 空间半径"
                 comp-slider (>> states :delta)
                   {} (:value delta) (:unit 0.1) (:min 1)
-                    :position $ [] 100 70
+                    :position $ [] -300 -230
                     :on-change $ fn (value d!)
                       d! cursor $ assoc state :delta value
                     :title "\"delta 半径增量"
                 comp-slider (>> states :r1)
                   {} (:value r1) (:unit 1) (:min 10)
-                    :position $ [] 240 20
+                    :position $ [] -160 -280
                     :title "\"r1 色块半径"
                     :on-change $ fn (value d!)
                       d! cursor $ assoc state :r1 value
                 comp-slider (>> states :hue-unit)
                   {} (:value hue-unit) (:unit 0.2) (:min 0)
-                    :position $ [] 380 20
+                    :position $ [] -20 -280
                     :title "\"hue-unit 色相步进"
                     :on-change $ fn (value d!)
                       d! cursor $ assoc state :hue-unit value
                 comp-slider (>> states :n)
                   {} (:value n) (:unit 0.2) (:min 1)
-                    :position $ [] 520 20
+                    :position $ [] 120 -280
                     :round? true
                     :title "\"n 点个数"
                     :on-change $ fn (value d!)
                       d! cursor $ assoc state :n value
                 comp-slider (>> states :c)
                   {} (:value c) (:unit 0.1) (:min 1) (:max 100)
-                    :position $ [] 660 20
+                    :position $ [] 260 -280
                     :round? true
                     :title "\"c 彩度"
                     :on-change $ fn (value d!)
                       d! cursor $ assoc state :c value
                 comp-slider (>> states :l)
                   {} (:value l) (:unit 0.1) (:min 1) (:max 100)
-                    :position $ [] 660 70
+                    :position $ [] 260 -230
                     :round? true
                     :title "\"l 亮度"
                     :on-change $ fn (value d!)
                       d! cursor $ assoc state :l value
                 comp-switch $ {} (:value hsl?)
-                  :position $ [] 800 20
+                  :position $ [] 400 -280
                   :title "\"HSL"
                   :on-change $ fn (v d!)
                     d! cursor $ assoc state :hsl? v
