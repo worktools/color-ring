@@ -20,7 +20,7 @@
     "copy-to-clipboard": "^3.3.1",
     "d3-color": "^3.0.1",
     "fontfaceobserver-es": "^3.3.3",
-    "pixi.js": "6.2.2",
-    "shortid": "^2.2.16"
+    "nanoid": "^3.2.0",
+    "pixi.js": "6.2.2"
   }
 }

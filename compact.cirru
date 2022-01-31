@@ -154,13 +154,14 @@
                 :rgb $ .!formatRgb color
     |app.main $ {}
       :ns $ quote
-        ns app.main $ :require ([] "\"pixi.js" :as PIXI) ([] "\"shortid" :as shortid)
-          [] phlox.core :refer $ [] render! clear-phlox-caches!
-          [] app.container :refer $ [] comp-container
-          [] app.schema :as schema
-          [] app.config :refer $ [] dev?
-          [] app.updater :refer $ [] updater
-          [] "\"fontfaceobserver-es" :default FontFaceObserver
+        ns app.main $ :require ("\"pixi.js" :as PIXI)
+          "\"nanoid" :refer $ nanoid
+          phlox.core :refer $ render! clear-phlox-caches!
+          app.container :refer $ comp-container
+          app.schema :as schema
+          app.config :refer $ dev?
+          app.updater :refer $ updater
+          "\"fontfaceobserver-es" :default FontFaceObserver
           "\"./calcit.build-errors" :default build-errors
           "\"bottom-tip" :default hud!
       :defs $ {}
@@ -187,7 +188,7 @@
                   and dev? $ not= op :states
                   println "\"dispatch!" op op-data
                 let
-                    op-id $ shortid/generate
+                    op-id $ nanoid
                     op-time $ js/Date.now
                   reset! *store $ updater @*store op op-data op-id op-time
         |reload! $ quote
