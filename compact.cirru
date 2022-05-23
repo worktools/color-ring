@@ -1,42 +1,23 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.main/main!) (:reload-fn |app.main/reload!)
+  :configs $ {} (:init-fn |app.main/main!) (:reload-fn |app.main/reload!) (:version nil)
     :modules $ [] |memof/ |lilac/ |respo.calcit/ |respo-ui.calcit/ |phlox/
-    :version nil
   :entries $ {}
   :files $ {}
-    |app.schema $ {}
-      :ns $ quote (ns app.schema)
+    |app.config $ {}
       :defs $ {}
-        |store $ quote
-          def store $ {} (:tab :drafts) (:x 0)
-            :states $ {}
-    |app.updater $ {}
-      :ns $ quote
-        ns app.updater $ :require
-          phlox.cursor :refer $ update-states
-      :defs $ {}
-        |updater $ quote
-          defn updater (store op op-data op-id op-time)
-            case-default op
-              do (println "\"unknown op" op op-data) store
-              :add-x $ update store :x
-                fn (x)
-                  if (> x 10) 0 $ + x 1
-              :tab $ assoc store :tab op-data
-              :states $ update-states store op-data
-              :hydrate-storage op-data
+        |cdn? $ quote
+          def cdn? $ cond
+              exists? js/window
+              , false
+            (exists? js/process) (= "\"true" js/process.env.cdn)
+            :else false
+        |dev? $ quote
+          def dev? $ = "\"dev" (get-env "\"mode" "\"release")
+        |site $ quote
+          def site $ {} (:dev-ui "\"http://localhost:8100/main-fonts.css") (:release-ui "\"http://cdn.tiye.me/favored-fonts/main-fonts.css") (:cdn-url "\"http://cdn.tiye.me/color-ring/") (:title "\"Color Ring") (:icon "\"http://cdn.tiye.me/logo/quamolit.png") (:storage-key "\"color-ring")
+      :ns $ quote (ns app.config)
     |app.container $ {}
-      :ns $ quote
-        ns app.container $ :require
-          [] phlox.core :refer $ [] defcomp >> hslx rect circle text container graphics create-list
-          [] phlox.complex :as complex
-          [] phlox.comp.drag-point :refer $ [] comp-drag-point
-          [] phlox.comp.slider :refer $ [] comp-slider
-          [] phlox.comp.switch :refer $ [] comp-switch
-          [] "\"pixi.js" :as PIXI
-          [] "\"d3-color" :refer $ [] hcl hsl
-          [] "\"copy-to-clipboard" :default copy!
       :defs $ {}
         |comp-container $ quote
           defcomp comp-container (store)
@@ -121,7 +102,7 @@
                     :on-change $ fn (value d!)
                       d! cursor $ assoc state :n value
                 comp-slider (>> states :c)
-                  {} (:value c) (:unit 0.1) (:min 1) (:max 100)
+                  {} (:value c) (:unit 0.1) (:min 1) (:max 230)
                     :position $ [] 260 -280
                     :round? true
                     :title "\"c 彩度"
@@ -152,33 +133,19 @@
                 :hex $ .!string2hex PIXI/utils (.!formatHex color)
                 :hex-string $ .!formatHex color
                 :rgb $ .!formatRgb color
-    |app.main $ {}
       :ns $ quote
-        ns app.main $ :require ("\"pixi.js" :as PIXI)
-          "\"nanoid" :refer $ nanoid
-          phlox.core :refer $ render! clear-phlox-caches!
-          app.container :refer $ comp-container
-          app.schema :as schema
-          app.config :refer $ dev?
-          app.updater :refer $ updater
-          "\"fontfaceobserver-es" :default FontFaceObserver
-          "\"./calcit.build-errors" :default build-errors
-          "\"bottom-tip" :default hud!
+        ns app.container $ :require
+          [] phlox.core :refer $ [] defcomp >> hslx rect circle text container graphics create-list
+          [] phlox.complex :as complex
+          [] phlox.comp.drag-point :refer $ [] comp-drag-point
+          [] phlox.comp.slider :refer $ [] comp-slider
+          [] phlox.comp.switch :refer $ [] comp-switch
+          [] "\"pixi.js" :as PIXI
+          [] "\"d3-color" :refer $ [] hcl hsl
+          [] "\"copy-to-clipboard" :default copy!
+    |app.main $ {}
       :defs $ {}
-        |render-app! $ quote
-          defn render-app! () $ render! (comp-container @*store) dispatch! ({})
-        |main! $ quote
-          defn main! () (; js/console.log PIXI)
-            -> global-fonts $ .then
-              fn (e) (render-app!)
-            add-watch *store :change $ fn (s p) (render-app!)
-            println "\"App Started"
         |*store $ quote (defatom *store schema/store)
-        |global-fonts $ quote
-          def global-fonts $ js/Promise.all
-            js-array
-              .load $ new FontFaceObserver "\"Josefin Sans"
-              .load $ new FontFaceObserver "\"Hind"
         |dispatch! $ quote
           defn dispatch! (op op-data)
             if (list? op)
@@ -191,6 +158,17 @@
                     op-id $ nanoid
                     op-time $ js/Date.now
                   reset! *store $ updater @*store op op-data op-id op-time
+        |global-fonts $ quote
+          def global-fonts $ js/Promise.all
+            js-array
+              .load $ new FontFaceObserver "\"Josefin Sans"
+              .load $ new FontFaceObserver "\"Hind"
+        |main! $ quote
+          defn main! () (; js/console.log PIXI)
+            -> global-fonts $ .then
+              fn (e) (render-app!)
+            add-watch *store :change $ fn (s p) (render-app!)
+            println "\"App Started"
         |reload! $ quote
           defn reload! () $ if (nil? build-errors)
             do (println "\"Code updated.") (clear-phlox-caches!) (remove-watch *store :change)
@@ -198,16 +176,37 @@
               render-app!
               hud! "\"ok~" "\"Ok"
             hud! "\"error" build-errors
-    |app.config $ {}
-      :ns $ quote (ns app.config)
+        |render-app! $ quote
+          defn render-app! () $ render! (comp-container @*store) dispatch! ({})
+      :ns $ quote
+        ns app.main $ :require ("\"pixi.js" :as PIXI)
+          "\"nanoid" :refer $ nanoid
+          phlox.core :refer $ render! clear-phlox-caches!
+          app.container :refer $ comp-container
+          app.schema :as schema
+          app.config :refer $ dev?
+          app.updater :refer $ updater
+          "\"fontfaceobserver-es" :default FontFaceObserver
+          "\"./calcit.build-errors" :default build-errors
+          "\"bottom-tip" :default hud!
+    |app.schema $ {}
       :defs $ {}
-        |cdn? $ quote
-          def cdn? $ cond
-              exists? js/window
-              , false
-            (exists? js/process) (= "\"true" js/process.env.cdn)
-            :else false
-        |dev? $ quote
-          def dev? $ = "\"dev" (get-env "\"mode")
-        |site $ quote
-          def site $ {} (:dev-ui "\"http://localhost:8100/main-fonts.css") (:release-ui "\"http://cdn.tiye.me/favored-fonts/main-fonts.css") (:cdn-url "\"http://cdn.tiye.me/color-ring/") (:title "\"Color Ring") (:icon "\"http://cdn.tiye.me/logo/quamolit.png") (:storage-key "\"color-ring")
+        |store $ quote
+          def store $ {} (:tab :drafts) (:x 0)
+            :states $ {}
+      :ns $ quote (ns app.schema)
+    |app.updater $ {}
+      :defs $ {}
+        |updater $ quote
+          defn updater (store op op-data op-id op-time)
+            case-default op
+              do (println "\"unknown op" op op-data) store
+              :add-x $ update store :x
+                fn (x)
+                  if (> x 10) 0 $ + x 1
+              :tab $ assoc store :tab op-data
+              :states $ update-states store op-data
+              :hydrate-storage op-data
+      :ns $ quote
+        ns app.updater $ :require
+          phlox.cursor :refer $ update-states
