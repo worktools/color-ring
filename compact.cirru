@@ -29,8 +29,8 @@
                     :center $ [] 0 0
                     :c 100
                     :l 80
-                    :hsl? false
-                ({} hue-unit n r1 r0 delta center c l hsl?) state
+                    :color-format :hcl
+                ({} hue-unit n r1 r0 delta center c l color-format) state
               container ({})
                 create-list :container ({})
                   -> (range n)
@@ -50,7 +50,7 @@
                                   js/Math.sin angle
                                 , 0
                               , center
-                          color $ hcl-color (* hue-unit idx) c l hsl?
+                          color $ hcl-color (* hue-unit idx) c l color-format
                         container
                           {} $ :position position
                           circle $ {}
@@ -115,34 +115,46 @@
                     :title "\"l 亮度"
                     :on-change $ fn (value d!)
                       d! cursor $ assoc state :l value
-                comp-switch $ {} (:value hsl?)
-                  :position $ [] 400 -280
-                  :title "\"HSL"
-                  :on-change $ fn (v d!)
-                    d! cursor $ assoc state :hsl? v
+                comp-format-switcher color-format $ fn (format d!)
+                  d! cursor $ assoc state :color-format format
+        |comp-format-switcher $ quote
+          defn comp-format-switcher (format on-change)
+            comp-tabs
+              [] ([] :hcl |HCL) ([] :hsl |HSL) ([] :hsluv |HSLuv)
+              , format
+                {} $ :position ([] 440 -240)
+                , on-change
         |hcl-color $ quote
-          defn hcl-color (h c l hsl?) (; js-debugger)
+          defn hcl-color (h c l color-format) (; js-debugger)
             ; println h c l (hcl h c l)
               .!toString $ hcl h c l
               PIXI/utils.string2hex $ .!formatHex (hcl h c l)
             let
-                color $ if hsl?
-                  hsl h (* 0.01 c) (* 0.01 l)
-                  hcl h c l
+                color $ case-default color-format (hcl h c l)
+                  :hsl $ hsl h (* 0.01 c) (* 0.01 l)
+                  :hsluv $ let
+                      rgb-arr $ hsluvToRgb (js-array h c l)
+                      r $ .-0 rgb-arr
+                      g $ .-1 rgb-arr
+                      b $ .-2 rgb-arr
+                    js/console.log rgb-arr
+                    rgb (* r 256) (* g 256) (* b 256)
               {}
                 :hex $ .!string2hex PIXI/utils (.!formatHex color)
                 :hex-string $ .!formatHex color
                 :rgb $ .!formatRgb color
       :ns $ quote
         ns app.container $ :require
-          [] phlox.core :refer $ [] defcomp >> hslx rect circle text container graphics create-list
-          [] phlox.complex :as complex
-          [] phlox.comp.drag-point :refer $ [] comp-drag-point
-          [] phlox.comp.slider :refer $ [] comp-slider
-          [] phlox.comp.switch :refer $ [] comp-switch
-          [] "\"pixi.js" :as PIXI
-          [] "\"d3-color" :refer $ [] hcl hsl
-          [] "\"copy-to-clipboard" :default copy!
+          phlox.core :refer $ defcomp >> hslx rect circle text container graphics create-list
+          phlox.complex :as complex
+          phlox.comp.drag-point :refer $ comp-drag-point
+          phlox.comp.slider :refer $ comp-slider
+          phlox.comp.switch :refer $ comp-switch
+          phlox.comp.tabs :refer $ comp-tabs
+          "\"pixi.js" :as PIXI
+          "\"d3-color" :refer $ hcl hsl rgb
+          "\"copy-to-clipboard" :default copy!
+          "\"hsluv" :refer $ hsluvToRgb
     |app.main $ {}
       :defs $ {}
         |*store $ quote (defatom *store schema/store)
