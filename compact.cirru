@@ -137,7 +137,7 @@
                       r $ .-0 rgb-arr
                       g $ .-1 rgb-arr
                       b $ .-2 rgb-arr
-                    js/console.log rgb-arr
+                    ; js/console.log rgb-arr
                     rgb (* r 256) (* g 256) (* b 256)
               {}
                 :hex $ .!string2hex PIXI/utils (.!formatHex color)
