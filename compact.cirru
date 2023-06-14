@@ -133,12 +133,16 @@
                 color $ case-default color-format (hcl h c l)
                   :hsl $ hsl h (* 0.01 c) (* 0.01 l)
                   :hsluv $ let
-                      rgb-arr $ hsluvToRgb (js-array h c l)
-                      r $ .-0 rgb-arr
-                      g $ .-1 rgb-arr
-                      b $ .-2 rgb-arr
-                    ; js/console.log rgb-arr
-                    rgb (* r 256) (* g 256) (* b 256)
+                      conv $ new Hsluv
+                    set! (.-hsluv_h conv) h
+                    set! (.-hsluv_s conv) c
+                    set! (.-hsluv_l conv) l
+                    .!hsluvToRgb conv
+                    ; js/console.log conv
+                    rgb
+                      * (.-rgb_r conv) 256
+                      * (.-rgb_g conv) 256
+                      * (.-rgb_b conv) 256
               {}
                 :hex $ .!string2hex PIXI/utils (.!formatHex color)
                 :hex-string $ .!formatHex color
@@ -154,7 +158,7 @@
           "\"pixi.js" :as PIXI
           "\"d3-color" :refer $ hcl hsl rgb
           "\"copy-to-clipboard" :default copy!
-          "\"hsluv" :refer $ hsluvToRgb
+          "\"hsluv" :refer $ Hsluv
     |app.main $ {}
       :defs $ {}
         |*store $ quote (defatom *store schema/store)
