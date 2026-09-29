@@ -6,16 +6,18 @@ on:
       - main
   pull_request: {}
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v7
 
-    - uses: actions/setup-node@v3
+    - uses: actions/setup-node@v6
       with:
-        node-version: 18
-        cache: 'yarn'
+        node-version: 24
 
     - uses: supplypike/setup-bin@v3
       with:
@@ -29,12 +31,44 @@ jobs:
         name: 'caps'
         version: '0.7.5'
 
-    - name: "compiles to js"
-      run: >
-        caps --ci && dev=false cr --emit-js --once
-        && yarn && yarn vite build --base=./
+    - name: Build client with CDN asset URLs
+      id: asset-path
+      env:
+        CDN_ORIGIN: https://cos-sh.tiye.me
+      run: |
+        caps --ci
+        dev=false cr --emit-js --once
+        yarn
+        if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+          asset_prefix="${GITHUB_REPOSITORY}/pr/"
+        else
+          asset_prefix="${GITHUB_REPOSITORY}/"
+        fi
+        export VITE_BASE_URL="${CDN_ORIGIN}/${asset_prefix}"
+        echo "VITE_BASE_URL=${VITE_BASE_URL}" >> "$GITHUB_ENV"
+        echo "prefix=${asset_prefix}" >> "$GITHUB_OUTPUT"
+        yarn vite build --base="$VITE_BASE_URL"
+
+    - name: Verify CDN asset references
+      run: node scripts/verify-cdn-build.mjs
+
+    - name: Upload static assets to COS
+      if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+      uses: worktools/cos-upload-action@0ce57b26b03dbdd27a4a544a06d453415932c62d # v1.0.0
+      with:
+        source-dir: dist
+        bucket: ${{ secrets.COS_BUCKET }}
+        region: ap-shanghai
+        prefix: ${{ steps.asset-path.outputs.prefix }}
+        secret-id: ${{ secrets.COS_SECRET_ID }}
+        secret-key: ${{ secrets.COS_SECRET_KEY }}
+
+    - name: Verify uploaded CDN assets
+      if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+      run: node scripts/verify-cdn-build.mjs --remote
 
     - name: Deploy to server
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       id: deploy
       uses: Pendect/action-rsyncer@v2.0.0
       env:
@@ -47,4 +81,5 @@ jobs:
         dest: 'rsync-user@tiye.me:/web-assets/repo/${{ github.repository }}'
 
     - name: Display status from deploy
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       run: echo "${{ steps.deploy.outputs.status }}"
