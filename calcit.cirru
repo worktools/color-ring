@@ -170,7 +170,7 @@
             phlox.comp.slider :refer $ [] comp-slider
             phlox.comp.tabs :refer $ [] comp-tabs
             app.schema :as schema
-            |./colors.mjs :refer $ [] makeColor hexNumber hexString rgbString
+            |../assets/colors.mjs :refer $ [] makeColor hexNumber hexString rgbString
             |copy-to-clipboard :default copy!
     'app.main $ %{} 'FileEntry
       :defs $ {}
@@ -230,7 +230,7 @@
             app.schema :as schema
             app.config :refer $ [] dev?
             app.updater :refer $ [] updater
-            |./fonts.mjs :refer $ [] whenFontsReady
+            |../assets/fonts.mjs :refer $ [] whenFontsReady
             |./calcit.build-errors :default build-errors
             |bottom-tip :default hud!
     'app.schema $ %{} 'FileEntry
