@@ -27,6 +27,8 @@ Local builds use relative asset URLs. CI sets `VITE_BASE_URL` to the matching CO
 
 CI checks canonical formatting, strict entry/all public definitions and compilation/build. No extra CDN checker or migration test suite is added. Open Phlox state values remain Dynamic, and published Phlox/Touch Control dependencies still request conflicting js-ffi versions; this does not claim a strictly conflict-free Caps graph or browser/WebGL acceptance.
 
+Before production publishing, CI compares the run revision with current `main` once. Stale queued runs skip both COS and server publishing; PR previews keep their isolated path and existing permission policy.
+
 ### Workflow
 
 Workflow https://github.com/Phlox-GL/phlox-workflow
