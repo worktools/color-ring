@@ -981,6 +981,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"mobile-detect@npm:^1.4.5":
+  version: 1.4.5
+  resolution: "mobile-detect@npm:1.4.5"
+  checksum: 10c0/7a704dc0e80911f8be09c62c9504f236f472ec668b9b010328335bb100660f603dc7b59a788a15b0c0d45b1f14432c6ffb862e02d775c685f8ac535450e0cd9c
+  languageName: node
+  linkType: hard
+
 "nanoid@npm:^3.3.18":
   version: 3.3.19
   resolution: "nanoid@npm:3.3.19"
@@ -1055,6 +1062,7 @@ __metadata:
     d3-color: "npm:^3.1.0"
     fontfaceobserver-es: "npm:^3.3.3"
     hsluv: "npm:^1.0.0"
+    mobile-detect: "npm:^1.4.5"
     nanoid: "npm:^4.0.2"
     pixi.js: "npm:7.2.4"
     vite: "npm:^8.3.1"

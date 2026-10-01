@@ -26,6 +26,7 @@
     "d3-color": "^3.1.0",
     "fontfaceobserver-es": "^3.3.3",
     "hsluv": "^1.0.0",
+    "mobile-detect": "^1.4.5",
     "nanoid": "^4.0.2",
     "pixi.js": "7.2.4"
   }
