@@ -2,56 +2,87 @@ name: Upload
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request: {}
 
 permissions:
   contents: read
 
+concurrency:
+  group: cos-upload-${{ github.repository }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || 'production' }}
+  cancel-in-progress: false
+
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
 
     - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
       with:
         node-version: 24
+        package-manager-cache: false
 
-    - uses: supplypike/setup-bin@v3
+    - name: Enable Corepack
+      run: |
+        corepack enable
+        corepack prepare yarn@4.18.0 --activate
+
+    - name: Set up Calcit and Caps
+      uses: calcit-lang/setup-calcit@ca701be5a471759e442aa053cd100720bbe1f09f # v1.5.0
       with:
-        uri: 'https://github.com/calcit-lang/calcit/releases/download/0.7.5/cr'
-        name: 'cr'
-        version: '0.7.5'
+        tools: calcit,caps
+        caps-version: "0.1.1"
 
-    - uses: supplypike/setup-bin@v3
-      with:
-        uri: 'https://github.com/calcit-lang/calcit/releases/download/0.7.5/caps'
-        name: 'caps'
-        version: '0.7.5'
+    - name: Resolve immutable dependencies
+      run: |
+        set -euo pipefail
+        caps --ci
+        yarn install --immutable
+        caps verify --toolchain
 
-    - name: Build client with CDN asset URLs
+    - name: Check canonical snapshot and types
+      run: |
+        set -euo pipefail
+        test "$(calcit --version)" = "0.27.0"
+        test -f calcit.cirru
+        test -f deps.cirru
+        test ! -e compact.cirru
+        test ! -e package.cirru
+        calcit edit format
+        git diff --exit-code -- calcit.cirru
+        calcit --check-only
+        calcit analyze check-public \
+          --ns app.config --ns app.container --ns app.main \
+          --ns app.schema --ns app.updater --summary-only --format json
+
+    - name: Select CDN asset path
       id: asset-path
       env:
         CDN_ORIGIN: https://cos-sh.tiye.me
+        PR_NUMBER: ${{ github.event.pull_request.number }}
       run: |
-        caps --ci
-        dev=false cr --emit-js --once
-        yarn
         if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-          asset_prefix="${GITHUB_REPOSITORY}/pr/"
+          asset_prefix="${GITHUB_REPOSITORY}/pr/${PR_NUMBER}/${GITHUB_RUN_ID}/${GITHUB_RUN_ATTEMPT}/"
         else
           asset_prefix="${GITHUB_REPOSITORY}/"
         fi
-        export VITE_BASE_URL="${CDN_ORIGIN}/${asset_prefix}"
-        echo "VITE_BASE_URL=${VITE_BASE_URL}" >> "$GITHUB_ENV"
+        base_url="${CDN_ORIGIN}/${asset_prefix}"
+        echo "VITE_BASE_URL=${base_url}" >> "$GITHUB_ENV"
         echo "prefix=${asset_prefix}" >> "$GITHUB_OUTPUT"
-        echo "base-url=${VITE_BASE_URL}" >> "$GITHUB_OUTPUT"
-        yarn vite build --base="$VITE_BASE_URL"
+        echo "base-url=${base_url}" >> "$GITHUB_OUTPUT"
 
-    - name: Upload static assets to COS
+    - name: Build frontend
+      run: |
+        set -euo pipefail
+        yarn compile
+        yarn build
+
+    - name: Upload and verify frontend assets
       if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+      timeout-minutes: 10
       uses: worktools/cos-upload-action@17e6d213fe9f6772a6090a13c8ba044cd6cbcb09 # v1.1.1
       with:
         source-dir: dist
@@ -67,7 +98,7 @@ jobs:
       id: deploy
       uses: Pendect/action-rsyncer@8e05ffa5c93e5d9c9b167796b26044d2c616b2b9 # v2.0.0
       env:
-        DEPLOY_KEY: ${{secrets.rsync_private_key}}
+        DEPLOY_KEY: ${{ secrets.rsync_private_key }}
       with:
         flags: '-avzr --progress'
         options: ''

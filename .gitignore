@@ -6,3 +6,9 @@ js-out/
 node_modules/
 dist/
 yarn-error.log
+
+.calcit/
+.yarn/
+.pnp.*
+compact.cirru
+package.cirru
