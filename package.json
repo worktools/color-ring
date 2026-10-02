@@ -5,9 +5,9 @@
   "main": "index.js",
   "packageManager": "yarn@4.18.0",
   "scripts": {
-    "compile": "calcit calcit.cirru js",
-    "build": "vite build",
-    "dev": "calcit calcit.cirru js && vite"
+    "compile": "calcit calcit.cirru",
+    "build": "yarn compile && vite build",
+    "dev": "yarn compile && vite"
   },
   "repository": {
     "type": "git",
