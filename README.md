@@ -17,8 +17,13 @@ based on `d3.hcl` funcition https://github.com/d3/d3-color#hcl .
 ```bash
 caps --strict --ci
 yarn install --immutable
+caps verify --toolchain
+calcit edit transaction --code '[["edit","format"]]' --dry-run --format json | jq -e '.changed == false'
 calcit --check-only --all-defs
 calcit fix --workflow strict --verify
+calcit --check-only \
+  --ns app.config --ns app.container --ns app.main \
+  --ns app.schema --ns app.updater --summary-only --format json
 yarn build
 ```
 
