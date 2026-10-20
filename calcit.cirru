@@ -26,12 +26,14 @@
       :defs $ {}
         'comp-container $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-container (store)
-            let-sugar
+            let
                 states $ decode-map-as
                   option:unwrap $ get store :states
                   :: 'Map 'Tag 'Dynamic
                 cursor $ []
-                state $ app.schema/normalize-state $ option:unwrap-or (get states :data) app.schema/initial-state
+                state $ match (get states :data)
+                  (:some data) (schema/normalize-state data)
+                  (:none) schema/initial-state
                 hue-unit $ :hue-unit state
                 n $ :n state
                 r1 $ :r1 state
@@ -68,7 +70,7 @@
                           circle $ {}
                             :position $ [] 0 0
                             :radius r1
-                            :fill $ do $ :hex color
+                            :fill $ :hex color
                             :on $ {} $ :pointertap
                               fn (e d!)
                                 copy! $ :hex-string color
@@ -81,67 +83,78 @@
                 comp-drag-point (>> states :center)
                   {} (:position center) (:radius 6)
                     :on-change $ fn (position d!)
-                      d! $ :: :states cursor $ assoc state :center position
+                      d! $ :: :states cursor $ assoc state :center
+                        decode-map-as position $ :: 'List 'Number
+                      , &unit
                 comp-slider (>> states :r0)
                   {} (:value r0) (:unit 1) (:min 10)
                     :position $ [] -300 -280
                     :on-change $ fn (value d!)
-                      d! $ :: :states cursor $ assoc state :r0 value
+                      d! $ :: :states cursor $ assoc state :r0 (decode-map-as value 'Number)
+                      , &unit
                     :title "|r0 空间半径"
                 comp-slider (>> states :delta)
                   {} (:value delta) (:unit 0.1) (:min 1)
                     :position $ [] -300 -230
                     :on-change $ fn (value d!)
-                      d! $ :: :states cursor $ assoc state :delta value
+                      d! $ :: :states cursor $ assoc state :delta (decode-map-as value 'Number)
+                      , &unit
                     :title "|delta 半径增量"
                 comp-slider (>> states :r1)
                   {} (:value r1) (:unit 1) (:min 10)
                     :position $ [] -160 -280
                     :title "|r1 色块半径"
                     :on-change $ fn (value d!)
-                      d! $ :: :states cursor $ assoc state :r1 value
+                      d! $ :: :states cursor $ assoc state :r1 (decode-map-as value 'Number)
+                      , &unit
                 comp-slider (>> states :hue-unit)
                   {} (:value hue-unit) (:unit 0.2) (:min 0)
                     :position $ [] -20 -280
                     :title "|hue-unit 色相步进"
                     :on-change $ fn (value d!)
-                      d! $ :: :states cursor $ assoc state :hue-unit value
+                      d! $ :: :states cursor $ assoc state :hue-unit (decode-map-as value 'Number)
+                      , &unit
                 comp-slider (>> states :n)
                   {} (:value n) (:unit 0.2) (:min 1)
                     :position $ [] 120 -280
                     :round? true
                     :title "|n 点个数"
                     :on-change $ fn (value d!)
-                      d! $ :: :states cursor $ assoc state :n value
+                      d! $ :: :states cursor $ assoc state :n (decode-map-as value 'Number)
+                      , &unit
                 comp-slider (>> states :c)
                   {} (:value c) (:unit 0.1) (:min 1) (:max 230)
                     :position $ [] 260 -280
                     :round? true
                     :title "|c 彩度"
                     :on-change $ fn (value d!)
-                      d! $ :: :states cursor $ assoc state :c value
+                      d! $ :: :states cursor $ assoc state :c (decode-map-as value 'Number)
+                      , &unit
                 comp-slider (>> states :l)
                   {} (:value l) (:unit 0.1) (:min 1) (:max 100)
                     :position $ [] 260 -230
                     :round? true
                     :title "|l 亮度"
                     :on-change $ fn (value d!)
-                      d! $ :: :states cursor $ assoc state :l value
+                      d! $ :: :states cursor $ assoc state :l (decode-map-as value 'Number)
+                      , &unit
                 comp-format-switcher color-format $ fn (format d!)
                   d! $ :: :states cursor $ assoc state :color-format format
+                  , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'phlox.schema/PhloxElement)
             :args $ [] $ :: 'Map 'Tag 'Dynamic
             :features $ #{} :js-ffi
         'comp-format-switcher $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn comp-format-switcher (format on-change)
-            assert-type
+            struct-match
               comp-tabs
                 [] ([] :hcl |HCL) ([] :hsl |HSL) ([] :hsluv |HSLuv)
                 , format
                   {} $ :position $ [] 440 -240
                   , on-change
-              , 'phlox.schema/PhloxElement
+              phlox-schema/PhloxElement element element
+              _ _ $ raise |expected-phlox-tabs-element
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'phlox.schema/PhloxElement)
             :args $ [] 'Tag $ :: 'Fn
@@ -151,7 +164,7 @@
         'hcl-color $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn hcl-color (h c l color-format)
             let
-                color $ makeColor h c l $ case-default color-format |hcl (:hsl |hsl) (:hsluv |hsluv)
+                color $ makeColor h c l $ match color-format (:hsl |hsl) (:hsluv |hsluv) (_ |hcl)
               app.schema/ColorData :hex
                 decode-map-as (hexNumber color) 'Number
                 , :hex-string
@@ -164,18 +177,19 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.container
           :require
-            phlox.core :refer $ [] defcomp >> hslx circle text container create-list
+            phlox.core :refer $ defcomp >> hslx circle text container create-list
             phlox.complex :as complex
-            phlox.comp.drag-point :refer $ [] comp-drag-point
-            phlox.comp.slider :refer $ [] comp-slider
-            phlox.comp.tabs :refer $ [] comp-tabs
+            phlox.comp.drag-point :refer $ comp-drag-point
+            phlox.comp.slider :refer $ comp-slider
+            phlox.comp.tabs :refer $ comp-tabs
             app.schema :as schema
-            |../assets/colors.mjs :refer $ [] makeColor hexNumber hexString rgbString
+            |../assets/colors.mjs :refer $ makeColor hexNumber hexString rgbString
             |copy-to-clipboard :default copy!
+            phlox.schema :as phlox-schema
     'app.main $ %{} 'FileEntry
       :defs $ {}
         '*store $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defatom *store schema/store
+          :code $ quote $ defref *store schema/store
           :examples $ []
           :schema $ :: 'Ref $ :: 'Map 'Tag 'Dynamic
         'dispatch! $ %{} 'CodeEntry (:doc |)
@@ -189,6 +203,7 @@
                 op-id $ decode-map-as (nanoid) 'String
                 op-time $ decode-map-as (js/Date.now) 'Number
               reset! *store $ updater @*store (schema/normalize-op op) op-id op-time
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'Enum
@@ -196,7 +211,7 @@
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             whenFontsReady $ fn () $ render-app!
-            add-watch *store :change $ fn (s p) (render-app!)
+            add-watch! *store :change $ fn (s p) (render-app!)
             println "|App Started"
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -204,12 +219,13 @@
             :features $ #{} :js-ffi
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
-            if (nil? build-errors)
-              do (println "|Code updated.") (clear-phlox-caches!) (remove-watch *store :change)
-                add-watch *store :change $ fn (store prev) (render-app!)
+            if (js-nullish? build-errors)
+              do (println "|Code updated.") (clear-phlox-caches!) (remove-watch! *store :change)
+                add-watch! *store :change $ fn (store prev) (render-app!)
                 render-app!
                 hud! |ok~ |Ok
               hud! |error build-errors
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
@@ -224,14 +240,14 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.main
           :require
-            |nanoid :refer $ [] nanoid
-            phlox.core :refer $ [] render! clear-phlox-caches!
-            app.container :refer $ [] comp-container
+            |nanoid :refer $ nanoid
+            phlox.core :refer $ render! clear-phlox-caches!
+            app.container :refer $ comp-container
             app.schema :as schema
-            app.config :refer $ [] dev?
-            app.updater :refer $ [] updater
-            |../assets/fonts.mjs :refer $ [] whenFontsReady
-            |./calcit.build-errors :default build-errors
+            app.config :refer $ dev?
+            app.updater :refer $ updater
+            |../assets/fonts.mjs :refer $ whenFontsReady
+            |./calcit.build-errors.mjs :default build-errors
             |bottom-tip :default hud!
     'app.schema $ %{} 'FileEntry
       :defs $ {}
@@ -277,7 +293,8 @@
         'normalize-state $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn normalize-state (data)
             if (struct? data)
-              if (&struct:matches? data RingState) (assert-type data 'app.schema/RingState) (raise |expected-ring-state)
+              struct-match data (RingState value value)
+                _ _ $ raise |expected-ring-state
               decode-map-as data 'app.schema/RingState
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'app.schema/RingState)
