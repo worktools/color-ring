@@ -96,7 +96,7 @@ jobs:
         fi
 
     - name: Upload and verify frontend assets
-      if: (github.event_name == 'push' && steps.production.outputs.current == 'true') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+      if: (github.event_name == 'push' && steps.production.outputs.current == 'true') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login != 'dependabot[bot]')
       timeout-minutes: 10
       uses: worktools/cos-upload-action@06d6027dcca6413c5936e04a9b6e9f0d5ef71ba0 # v1.2.0
       with:
