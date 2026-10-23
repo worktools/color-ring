@@ -17,11 +17,11 @@ jobs:
   test:
     runs-on: ubuntu-24.04
     steps:
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+    - uses: actions/checkout@v7.0.1
       with:
         persist-credentials: false
 
-    - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+    - uses: actions/setup-node@v6.5.0
       with:
         node-version: 24
         package-manager-cache: false
@@ -32,7 +32,7 @@ jobs:
         corepack prepare yarn@4.18.0 --activate
 
     - name: Set up Calcit and Caps
-      uses: calcit-lang/setup-calcit@ca701be5a471759e442aa053cd100720bbe1f09f # v1.5.0
+      uses: calcit-lang/setup-calcit@v1.5.0
       with:
         tools: calcit,caps
         caps-version: "0.1.1"
@@ -52,7 +52,7 @@ jobs:
         test ! -e compact.cirru
         test ! -e package.cirru
         calcit edit transaction --code '[["edit","format"]]' --dry-run --format json | jq -e '.changed == false'
-        calcit --check-only --all-defs
+        calcit --check-only --all-defs --format json
         calcit fix --workflow strict --verify
         calcit --check-only \
           --ns app.config --ns app.container --ns app.main \
@@ -79,6 +79,15 @@ jobs:
       run: |
         set -euo pipefail
         yarn build
+
+    - name: Retain tested preview
+      if: github.event_name == 'pull_request'
+      uses: actions/upload-artifact@v7.0.0
+      with:
+        name: color-ring-preview
+        path: dist/
+        retention-days: 7
+        if-no-files-found: error
 
     - name: Check current production revision
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'

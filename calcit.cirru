@@ -12,7 +12,7 @@
       :defs $ {}
         'dev? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def dev?
-            = |dev $ option:unwrap-or (get-env |mode) |release
+            = |dev $ .unwrap-or (get-env |mode) |release
           :examples $ []
           :schema $ :: 'Bool
         'site $ %{} 'CodeEntry (:doc |)
@@ -28,7 +28,7 @@
           :code $ quote $ defcomp comp-container (store)
             let
                 states $ decode-map-as
-                  option:unwrap $ get store :states
+                  .unwrap $ get store :states
                   :: 'Map 'Tag 'Dynamic
                 cursor $ []
                 state $ match (get states :data)
@@ -315,7 +315,7 @@
               (:add-x)
                 let
                     x $ decode-map-as
-                      option:unwrap $ get store :x
+                      .unwrap $ get store :x
                       , 'Number
                   assoc store :x $ if (> x 10) 0 $ + x 1
               (:tab t) (assoc store :tab t)
