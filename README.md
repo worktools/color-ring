@@ -40,6 +40,9 @@ CI retains the same job, canonical/strict entry/all public definition checks and
 此前 alpha.5 迁移已通过 180/180 全定义、原五个公开 namespace 的 18/18 定义及完整 strict，并验收三种颜色、点数与中心拖拽。这些历史证据不替代本次正式工具链和 Pixi 7.4.3 的 CI/实际产物验收；本轮证据见对应 PR。不声称全部控件、跨浏览器/设备、系统剪贴板或生产部署验收；未混入 Pixi 主版本升级。
 
 Before production publishing, CI compares the run revision with current `main` once. Stale queued runs skip both COS and server publishing; PR previews keep their isolated path and existing permission policy.
+The two actions that receive COS or deployment credentials retain their original
+full commit pins, with release labels in comments. Calcit modules continue using
+exact formal version tags; these are separate dependency policies.
 
 ### Workflow
 
