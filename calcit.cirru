@@ -14,12 +14,12 @@
           :code $ quote $ def dev?
             = |dev $ .unwrap-or (get-env |mode) |release
           :examples $ []
-          :schema $ :: 'Bool
+          :schema $ quote Bool
         'site $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def site
             {} (:dev-ui |http://localhost:8100/main-fonts.css) (:release-ui |http://cdn.tiye.me/favored-fonts/main-fonts.css) (:cdn-url |http://cdn.tiye.me/color-ring/) (:title "|Color Ring") (:icon |http://cdn.tiye.me/logo/quamolit.png) (:storage-key |color-ring)
           :examples $ []
-          :schema $ :: 'Map 'Tag 'String
+          :schema $ quote $ Map Tag String
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.config
     'app.container $ %{} 'FileEntry
@@ -142,9 +142,7 @@
                   d! $ :: :states cursor $ assoc state :color-format format
                   , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'phlox.schema/PhloxElement)
-            :args $ [] $ :: 'Map 'Tag 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (Map Tag Dynamic) (-> phlox.schema/PhloxElement) (:features :js-ffi)
         'comp-format-switcher $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn comp-format-switcher (format on-change)
             struct-match
@@ -156,11 +154,10 @@
               phlox-schema/PhloxElement element element
               _ _ $ raise |expected-phlox-tabs-element
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'phlox.schema/PhloxElement)
-            :args $ [] 'Tag $ :: 'Fn
-              {} (:return 'Unit)
-                :args $ [] 'Tag 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn Tag
+            Fn Tag Dynamic $ -> Unit
+            -> phlox.schema/PhloxElement
+            :features :js-ffi
         'hcl-color $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn hcl-color (h c l color-format)
             let
@@ -171,9 +168,7 @@
                   decode-map-as (hexString color) 'String
                   , :rgb $ decode-map-as (rgbString color) 'String
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'app.schema/ColorData)
-            :args $ [] 'Number 'Number 'Number 'Tag
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn Number Number Number Tag (-> app.schema/ColorData) (:features :js-ffi)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.container
           :require
@@ -191,7 +186,7 @@
         '*store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defref *store schema/store
           :examples $ []
-          :schema $ :: 'Ref $ :: 'Map 'Tag 'Dynamic
+          :schema $ quote $ Ref (Map Tag Dynamic)
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
             when
@@ -205,18 +200,14 @@
               reset! *store $ updater @*store (schema/normalize-op op) op-id op-time
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Enum
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn Enum (-> Unit) (:features :js-ffi)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             whenFontsReady $ fn () $ render-app!
             add-watch! *store :change $ fn (s p) (render-app!)
             println "|App Started"
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (js-nullish? build-errors)
@@ -227,16 +218,12 @@
               hud! |error build-errors
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
             render! (comp-container @*store) dispatch! $ {}
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.main
           :require
@@ -254,26 +241,28 @@
         'ColorData $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct ColorData (:hex 'Number) (:hex-string 'String) (:rgb 'String)
           :examples $ []
-          :schema $ :: 'StructDef
+          :schema $ quote StructDef
         'Op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum Op (:add-x) (:tab 'Tag)
-            :states (:: 'List 'Dynamic) 'Dynamic
-            :hydrate-storage $ :: 'Map 'Tag 'Dynamic
+            :states
+              quote $ List Dynamic
+              , 'Dynamic
+            :hydrate-storage $ quote $ Map Tag Dynamic
           :examples $ []
-          :schema $ :: 'EnumDef
+          :schema $ quote EnumDef
         'RingState $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct RingState (:hue-unit 'Number) (:n 'Number) (:r0 'Number) (:r1 'Number) (:delta 'Number)
-            :center $ :: 'List 'Number
+            :center $ quote $ List Number
             :c 'Number
             :l 'Number
             :color-format 'Tag
           :examples $ []
-          :schema $ :: 'StructDef
+          :schema $ quote StructDef
         'initial-state $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def initial-state
             RingState :hue-unit 12 :n 120 :r0 50 :r1 20 :delta 3 :center ([] 0 0) :c 100 :l 80 :color-format :hcl
           :examples $ []
-          :schema $ :: 'app.schema/RingState
+          :schema $ quote app.schema/RingState
         'normalize-op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn normalize-op (op)
             match op
@@ -288,8 +277,7 @@
                 Op :hydrate-storage $ decode-map-as data $ :: 'Map 'Tag 'Dynamic
               _ $ raise |unknown-color-ring-op
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'app.schema/Op)
-            :args $ [] 'Enum
+          :schema $ quote $ Fn Enum (-> app.schema/Op)
         'normalize-state $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn normalize-state (data)
             if (struct? data)
@@ -297,14 +285,13 @@
                 _ _ $ raise |expected-ring-state
               decode-map-as data 'app.schema/RingState
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'app.schema/RingState)
-            :args $ [] 'Dynamic
+          :schema $ quote $ Fn Dynamic (-> app.schema/RingState)
         'store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def store
             {} (:tab :drafts) (:x 0)
               :states $ {}
           :examples $ []
-          :schema $ :: 'Map 'Tag 'Dynamic
+          :schema $ quote $ Map Tag Dynamic
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.schema
     'app.updater $ %{} 'FileEntry
@@ -322,9 +309,8 @@
               (:states cursor s) (update-states store cursor s)
               (:hydrate-storage d) d
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] (:: 'Map 'Tag 'Dynamic) 'app.schema/Op 'String 'Number
-            :return $ :: 'Map 'Tag 'Dynamic
+          :schema $ quote $ Fn (Map Tag Dynamic) app.schema/Op String Number
+            -> $ Map Tag Dynamic
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.updater
           :require $ phlox.cursor :refer $ update-states
