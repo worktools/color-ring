@@ -40,6 +40,7 @@
                 c $ :c state
                 l $ :l state
                 color-format $ :color-format state
+                color-space $ schema/resolve-color-space color-format
               container ({})
                 create-list :container ({})
                   -> (range n)
@@ -61,7 +62,7 @@
                                   phlox.core/ffi-sin angle
                                 , 0
                               , center
-                          color $ hcl-color (* hue-unit idx) c l color-format
+                          color $ hcl-color (* hue-unit idx) c l color-space
                         container
                           {} $ :position position
                           circle $ {}
@@ -157,14 +158,17 @@
         'hcl-color $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn hcl-color (h c l color-format)
             let
-                color $ makeColor h c l $ match color-format (:hsl |hsl) (:hsluv |hsluv) (_ |hcl)
+                color $ makeColor h c l $ match color-format
+                  (:hcl) |hcl
+                  (:hsl) |hsl
+                  (:hsluv) |hsluv
               app.schema/ColorData :hex
                 decode-map-as (hexNumber color) 'Number
                 , :hex-string
                   decode-map-as (hexString color) 'String
                   , :rgb $ decode-map-as (rgbString color) 'String
           :examples $ []
-          :schema $ quote $ Fn Number Number Number Tag (-> app.schema/ColorData) (:features :js-ffi)
+          :schema $ quote $ Fn Number Number Number app.schema/ColorSpace (-> app.schema/ColorData) (:features :js-ffi)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.container
           :require
@@ -243,6 +247,10 @@
           :code $ quote $ defstruct ColorData (:hex Number) (:hex-string String) (:rgb String)
           :examples $ []
           :schema $ quote StructDef
+        'ColorSpace $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defenum ColorSpace (:hcl) (:hsl) (:hsluv)
+          :examples $ []
+          :schema $ quote EnumDef
         'Op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum Op (:add-x) (:tab Tag)
             :states (List Tag) Dynamic
@@ -284,7 +292,7 @@
                 Op :ring-state $ normalize-state data
               _ $ raise |unknown-color-ring-op
           :examples $ []
-          :schema $ quote $ Fn AnyEnum (-> app.schema/Op)
+          :schema $ quote $ Fn AnyEnum (-> app.schema/Op) (:open :decode)
         'normalize-state $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn normalize-state (data)
             if (struct? data)
@@ -293,6 +301,14 @@
               decode-map-as data 'app.schema/RingState
           :examples $ []
           :schema $ quote $ Fn Dynamic (-> app.schema/RingState)
+        'resolve-color-space $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn resolve-color-space (format)
+            match format
+              :hsl $ ColorSpace :hsl
+              :hsluv $ ColorSpace :hsluv
+              _ $ ColorSpace :hcl
+          :examples $ []
+          :schema $ quote $ Fn Tag (-> app.schema/ColorSpace)
         'store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def store
             Store :tab :drafts :x 0 :states $ {}
