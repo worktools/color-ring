@@ -81,21 +81,29 @@
                 comp-drag-point (>> states :center)
                   {} (:position center) (:radius 6)
                     :on-change $ fn (position d!)
-                      d! $ schema/Op :ring-state $ assoc state :center
-                        decode-map-as position $ List Number
+                      hint-fn $ Fn (List Number)
+                        Fn schema/Op $ -> Unit
+                        -> Unit
+                      d! $ schema/Op :ring-state $ assoc state :center position
                       , &unit
                 comp-slider (>> states :r0)
                   {} (:value r0) (:unit 1) (:min 10)
                     :position $ [] -300 -280
                     :on-change $ fn (value d!)
-                      d! $ schema/Op :ring-state $ assoc state :r0 (decode-map-as value 'Number)
+                      hint-fn $ Fn Number
+                        Fn schema/Op $ -> Unit
+                        -> Unit
+                      d! $ schema/Op :ring-state $ assoc state :r0 value
                       , &unit
                     :title "|r0 空间半径"
                 comp-slider (>> states :delta)
                   {} (:value delta) (:unit 0.1) (:min 1)
                     :position $ [] -300 -230
                     :on-change $ fn (value d!)
-                      d! $ schema/Op :ring-state $ assoc state :delta (decode-map-as value 'Number)
+                      hint-fn $ Fn Number
+                        Fn schema/Op $ -> Unit
+                        -> Unit
+                      d! $ schema/Op :ring-state $ assoc state :delta value
                       , &unit
                     :title "|delta 半径增量"
                 comp-slider (>> states :r1)
@@ -103,14 +111,20 @@
                     :position $ [] -160 -280
                     :title "|r1 色块半径"
                     :on-change $ fn (value d!)
-                      d! $ schema/Op :ring-state $ assoc state :r1 (decode-map-as value 'Number)
+                      hint-fn $ Fn Number
+                        Fn schema/Op $ -> Unit
+                        -> Unit
+                      d! $ schema/Op :ring-state $ assoc state :r1 value
                       , &unit
                 comp-slider (>> states :hue-unit)
                   {} (:value hue-unit) (:unit 0.2) (:min 0)
                     :position $ [] -20 -280
                     :title "|hue-unit 色相步进"
                     :on-change $ fn (value d!)
-                      d! $ schema/Op :ring-state $ assoc state :hue-unit (decode-map-as value 'Number)
+                      hint-fn $ Fn Number
+                        Fn schema/Op $ -> Unit
+                        -> Unit
+                      d! $ schema/Op :ring-state $ assoc state :hue-unit value
                       , &unit
                 comp-slider (>> states :n)
                   {} (:value n) (:unit 0.2) (:min 1)
@@ -118,7 +132,10 @@
                     :round? true
                     :title "|n 点个数"
                     :on-change $ fn (value d!)
-                      d! $ schema/Op :ring-state $ assoc state :n (decode-map-as value 'Number)
+                      hint-fn $ Fn Number
+                        Fn schema/Op $ -> Unit
+                        -> Unit
+                      d! $ schema/Op :ring-state $ assoc state :n value
                       , &unit
                 comp-slider (>> states :c)
                   {} (:value c) (:unit 0.1) (:min 1) (:max 230)
@@ -126,7 +143,10 @@
                     :round? true
                     :title "|c 彩度"
                     :on-change $ fn (value d!)
-                      d! $ schema/Op :ring-state $ assoc state :c (decode-map-as value 'Number)
+                      hint-fn $ Fn Number
+                        Fn schema/Op $ -> Unit
+                        -> Unit
+                      d! $ schema/Op :ring-state $ assoc state :c value
                       , &unit
                 comp-slider (>> states :l)
                   {} (:value l) (:unit 0.1) (:min 1) (:max 100)
@@ -134,13 +154,16 @@
                     :round? true
                     :title "|l 亮度"
                     :on-change $ fn (value d!)
-                      d! $ schema/Op :ring-state $ assoc state :l (decode-map-as value 'Number)
+                      hint-fn $ Fn Number
+                        Fn schema/Op $ -> Unit
+                        -> Unit
+                      d! $ schema/Op :ring-state $ assoc state :l value
                       , &unit
                 comp-format-switcher color-format $ fn (format d!)
                   d! $ schema/Op :ring-state $ assoc state :color-format format
                   , &unit
           :examples $ []
-          :schema $ quote $ Fn app.schema/Store (-> phlox.schema/PhloxElement) (:features :js-ffi)
+          :schema $ quote $ Fn schema/Store (-> phlox.schema/PhloxElement) (:features :js-ffi)
         'comp-format-switcher $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn comp-format-switcher (format on-change)
             comp-tabs
@@ -151,7 +174,7 @@
           :examples $ []
           :schema $ quote $ Fn Tag
             Fn Tag
-              Fn app.schema/Op $ -> Unit
+              Fn schema/Op $ -> Unit
               -> Unit
             -> phlox.schema/PhloxElement
             :features :js-ffi
@@ -168,7 +191,7 @@
                   decode-map-as (hexString color) 'String
                   , :rgb $ decode-map-as (rgbString color) 'String
           :examples $ []
-          :schema $ quote $ Fn Number Number Number app.schema/ColorSpace (-> app.schema/ColorData) (:features :js-ffi)
+          :schema $ quote $ Fn Number Number Number schema/ColorSpace (-> schema/ColorData) (:features :js-ffi)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.container
           :require
@@ -185,7 +208,7 @@
         '*store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defref *store schema/store
           :examples $ []
-          :schema $ quote $ Ref app.schema/Store
+          :schema $ quote $ Ref schema/Store
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
             when
@@ -200,7 +223,7 @@
               reset! *store $ updater @*store op op-id op-time
             , &unit
           :examples $ []
-          :schema $ quote $ Fn app.schema/Op (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn schema/Op (-> Unit) (:features :js-ffi)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             whenFontsReady $ fn () $ render-app!
@@ -275,7 +298,7 @@
           :code $ quote $ def initial-state
             RingState :hue-unit 12 :n 120 :r0 50 :r1 20 :delta 3 :center ([] 0 0) :c 100 :l 80 :color-format :hcl
           :examples $ []
-          :schema $ quote app.schema/RingState
+          :schema $ quote RingState
         'normalize-op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn normalize-op (op)
             match op
@@ -292,7 +315,7 @@
                 Op :ring-state $ normalize-state data
               _ $ raise |unknown-color-ring-op
           :examples $ []
-          :schema $ quote $ Fn AnyEnum (-> app.schema/Op) (:open :decode)
+          :schema $ quote $ Fn AnyEnum (-> Op) (:open :decode)
         'normalize-state $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn normalize-state (data)
             if (struct? data)
@@ -300,7 +323,7 @@
                 _ _ $ raise |expected-ring-state
               decode-map-as data 'app.schema/RingState
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> app.schema/RingState)
+          :schema $ quote $ Fn Dynamic (-> RingState)
         'resolve-color-space $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn resolve-color-space (format)
             match format
@@ -308,12 +331,12 @@
               :hsluv $ ColorSpace :hsluv
               _ $ ColorSpace :hcl
           :examples $ []
-          :schema $ quote $ Fn Tag (-> app.schema/ColorSpace)
+          :schema $ quote $ Fn Tag (-> ColorSpace)
         'store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def store
             Store :tab :drafts :x 0 :states $ {}
           :examples $ []
-          :schema $ quote app.schema/Store
+          :schema $ quote Store
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.schema
     'app.updater $ %{} 'FileEntry

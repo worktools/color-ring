@@ -10,7 +10,7 @@ based on `d3.hcl` funcition https://github.com/d3/d3-color#hcl .
 
 ### Development and deployment
 
-使用者影响：本项目使用正式 Calcit / `@calcit/procs` **0.40.0**、Node.js 24 和 Yarn 4.18.0。本地升级后请重新安装依赖并刷新页面。HCL、HSL、HSLuv 颜色算法、滑杆范围与步长、字体等待、颜色复制和前端部署路径沿用原有配置。内部颜色计算接收具名 `ColorSpace`，旧状态的格式 Tag 仍可读取，未知格式沿用 HCL 回退。
+使用者影响：本项目使用正式 Calcit / `@calcit/procs` **0.41.0**、Node.js 24 和 Yarn 4.18.0。本地升级后请重新安装依赖并刷新页面。HCL、HSL、HSLuv 颜色算法、滑杆范围与步长、字体等待、颜色复制和前端部署路径沿用原有配置。内部颜色计算接收具名 `ColorSpace`，旧状态的格式 Tag 仍可读取，未知格式沿用 HCL 回退。
 
 正式模块为 Phlox **0.9.3**、Touch Control **0.0.39**，传递依赖 JS FFI **0.2.13**、Pointed Prompt **0.0.27**。使用 Caps 严格安装已发布 tag。
 
@@ -28,7 +28,7 @@ yarn build
 ```
 
 `Store` 固定应用状态的字段，dispatch 和 updater 接收具名的 `Op`。颜色控件通过
-`:ring-state` 传递 `RingState`。Phlox 的匿名事件只在渲染入口解码，组件游标仍可存放异构数据。
+`:ring-state` 传递 `RingState`。滑杆回调接收 Number，拖拽点回调接收 List Number，两者都派发具名 Op。Phlox 的匿名事件只在渲染入口解码，组件游标仍可存放异构数据。
 旧的完整状态 Map 在水合时校验字段并转为 `Store`。Phlox 0.9.3 的 `comp-tabs` 已声明
 `PhloxElement` 返回值，回调使用本地精确签名。上游的 dispatch 和 widget 回调合同仍由
 [Phlox #72](https://github.com/Phlox-GL/phlox/issues/72) 跟进。
