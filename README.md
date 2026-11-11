@@ -10,7 +10,7 @@ based on `d3.hcl` funcition https://github.com/d3/d3-color#hcl .
 
 ### Development and deployment
 
-使用者影响：本项目使用正式 Calcit / `@calcit/procs` **0.41.0**、Node.js 24 和 Yarn 4.18.0。本地升级后请重新安装依赖并刷新页面。HCL、HSL、HSLuv 颜色算法、滑杆范围与步长、字体等待、颜色复制和前端部署路径沿用原有配置。内部颜色计算接收具名 `ColorSpace`，旧状态的格式 Tag 仍可读取，未知格式沿用 HCL 回退。
+使用者影响：本项目使用正式 Calcit / `@calcit/procs` **0.41.1**、Node.js 24 和 Yarn 4.18.0。本地升级后请重新安装依赖并刷新页面。HCL、HSL、HSLuv 颜色算法、滑杆范围与步长、字体等待、颜色复制和前端部署路径沿用原有配置。内部颜色计算接收具名 `ColorSpace`，旧状态的格式 Tag 仍可读取，未知格式沿用 HCL 回退。
 
 正式模块为 Phlox **0.9.3**、Touch Control **0.0.39**，传递依赖 JS FFI **0.2.13**、Pointed Prompt **0.0.27**。使用 Caps 严格安装已发布 tag。
 
