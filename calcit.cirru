@@ -274,9 +274,13 @@
           :code $ quote $ defenum ColorSpace (:hcl) (:hsl) (:hsluv)
           :examples $ []
           :schema $ quote EnumDef
+        'GestureField $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion GestureField Bool Number (List Number)
+          :examples $ []
+          :schema $ quote UnionDef
         'Op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum Op (:add-x) (:tab Tag)
-            :states (List Tag) Dynamic
+            :states (List Tag) (Map Tag GestureField)
             :ring-state app.schema/RingState
             :hydrate-storage app.schema/Store
           :examples $ []
@@ -308,7 +312,7 @@
               (:states cursor data)
                 Op :states
                   decode-map-as cursor $ List Tag
-                  , data
+                  decode-map-as data $ Map Tag GestureField
               (:hydrate-storage data)
                 Op :hydrate-storage $ decode-map-as data app.schema/Store
               (:ring-state data)
@@ -316,6 +320,18 @@
               _ $ raise |unknown-color-ring-op
           :examples $ []
           :schema $ quote $ Fn AnyEnum (-> Op) (:open :decode)
+          :tests $ [] $ %{} 'TestEntry (:name |decodes-slider-and-drag-point-gestures)
+            :code $ quote $ let
+                slider $ {} (:dragging? true) (:x0 24) (:v0 50)
+                drag $ {} (:dragging? true)
+                  :x0 $ [] 2 3
+                  :p0 $ [] 4 5
+              assert=
+                Op :states ([] :r0) slider
+                normalize-op $ :: :states ([] :r0) slider
+              assert=
+                Op :states ([] :center) drag
+                normalize-op $ :: :states ([] :center) drag
         'normalize-state $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn normalize-state (data)
             if (struct? data)
