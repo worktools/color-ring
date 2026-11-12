@@ -274,9 +274,13 @@
           :code $ quote $ defenum ColorSpace (:hcl) (:hsl) (:hsluv)
           :examples $ []
           :schema $ quote EnumDef
+        'GestureField $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion GestureField Bool Number (List Number)
+          :examples $ []
+          :schema $ quote UnionDef
         'Op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum Op (:add-x) (:tab Tag)
-            :states (List Tag) Dynamic
+            :states (List Tag) (Map Tag GestureField)
             :ring-state app.schema/RingState
             :hydrate-storage app.schema/Store
           :examples $ []
@@ -289,9 +293,13 @@
             :color-format Tag
           :examples $ []
           :schema $ quote StructDef
+        'StateValue $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion StateValue app.schema/GestureField Tag app.schema/RingState (Map Tag app.schema/StateValue)
+          :examples $ []
+          :schema $ quote UnionDef
         'Store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Store (:tab Tag) (:x Number)
-            :states $ Map Tag Dynamic
+            :states $ Map Tag app.schema/StateValue
           :examples $ []
           :schema $ quote StructDef
         'initial-state $ %{} 'CodeEntry (:doc |)
@@ -308,22 +316,45 @@
               (:states cursor data)
                 Op :states
                   decode-map-as cursor $ List Tag
-                  , data
+                  decode-map-as data $ Map Tag GestureField
               (:hydrate-storage data)
                 Op :hydrate-storage $ decode-map-as data app.schema/Store
               (:ring-state data)
-                Op :ring-state $ normalize-state data
+                Op :ring-state $ normalize-state $ decode-map-as data app.schema/StateValue
               _ $ raise |unknown-color-ring-op
           :examples $ []
           :schema $ quote $ Fn AnyEnum (-> Op) (:open :decode)
+          :tests $ []
+            %{} 'TestEntry (:name |decodes-slider-and-drag-point-gestures)
+              :code $ quote $ let
+                  slider $ {} (:dragging? true) (:x0 24) (:v0 50)
+                  drag $ {} (:dragging? true)
+                    :x0 $ [] 2 3
+                    :p0 $ [] 4 5
+                assert=
+                  Op :states ([] :r0) slider
+                  normalize-op $ :: :states ([] :r0) slider
+                assert=
+                  Op :states ([] :center) drag
+                  normalize-op $ :: :states ([] :center) drag
+            %{} 'TestEntry (:name |retains-legacy-ring-state-maps)
+              :code $ quote $ let
+                  expected $ Op :ring-state initial-state
+                assert= expected $ normalize-op $ :: :ring-state
+                  {} (:hue-unit 12) (:n 120) (:r0 50) (:r1 20) (:delta 3)
+                    :center $ [] 0 0
+                    :c 100
+                    :l 80
+                    :color-format :hcl
+                assert= expected $ normalize-op $ :: :ring-state initial-state
         'normalize-state $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn normalize-state (data)
-            if (struct? data)
-              struct-match data (RingState value value)
-                _ _ $ raise |expected-ring-state
-              decode-map-as data 'app.schema/RingState
+            match data
+              (RingState state) state
+              (Map fields) (decode-map-as fields 'app.schema/RingState)
+              _ $ raise |expected-ring-state
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> RingState)
+          :schema $ quote $ Fn StateValue (-> RingState)
         'resolve-color-space $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn resolve-color-space (format)
             match format
@@ -352,11 +383,31 @@
               (:states cursor data)
                 assoc store :states $ decode-map-as
                   assoc-in (:states store) (conj cursor :data) data
-                  Map Tag Dynamic
+                  Map Tag app.schema/StateValue
               (:hydrate-storage data) data
               (:ring-state state)
                 assoc store :states $ assoc (:states store) :data state
           :examples $ []
           :schema $ quote $ Fn app.schema/Store app.schema/Op String Number (-> app.schema/Store)
+          :tests $ [] $ %{} 'TestEntry (:name |preserves-ring-state-and-child-gestures)
+            :code $ quote $ let
+                ring $ assoc app.schema/initial-state :center $ [] 8 13
+                slider $ {} (:dragging? true) (:x0 24) (:v0 50)
+                drag $ {} (:dragging? true)
+                  :x0 $ [] 2 3
+                  :p0 $ [] 4 5
+                updated $ -> app.schema/store
+                  updater (app.schema/Op :ring-state ring) |id 0
+                  updater
+                    app.schema/Op :states ([] :r0) slider
+                    , |id 1
+                  updater
+                    app.schema/Op :states ([] :center) drag
+                    , |id 2
+              assert=
+                {} (:data ring)
+                  :r0 $ {} $ :data slider
+                  :center $ {} $ :data drag
+                updated :states
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.updater
