@@ -29,7 +29,8 @@
             let
                 states $ :states store
                 state $ match (get states :data)
-                  (:some data) (schema/normalize-state data)
+                  (:some data)
+                    schema/normalize-state $ decode-map-as data app.schema/RingPayload
                   (:none) schema/initial-state
                 hue-unit $ :hue-unit state
                 n $ :n state
@@ -223,14 +224,14 @@
               reset! *store $ updater @*store op op-id op-time
             , &unit
           :examples $ []
-          :schema $ quote $ Fn schema/Op (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn schema/Op (-> Unit) (:features :io :js-ffi :state)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             whenFontsReady $ fn () $ render-app!
             add-watch! *store :change $ fn (s p) (render-app!)
             println "|App Started"
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (js-nullish? build-errors)
@@ -241,7 +242,7 @@
               hud! |error build-errors
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
             render! (comp-container @*store)
@@ -251,7 +252,7 @@
                   raise |expected-color-ring-event
               {}
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.main
           :require
@@ -285,6 +286,14 @@
             :hydrate-storage app.schema/Store
           :examples $ []
           :schema $ quote EnumDef
+        'RingField $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion RingField Number Tag (List Number)
+          :examples $ []
+          :schema $ quote UnionDef
+        'RingPayload $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion RingPayload RingState (Map Tag RingField)
+          :examples $ []
+          :schema $ quote UnionDef
         'RingState $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct RingState (:hue-unit Number) (:n Number) (:r0 Number) (:r1 Number) (:delta Number)
             :center $ List Number
@@ -320,7 +329,7 @@
               (:hydrate-storage data)
                 Op :hydrate-storage $ decode-map-as data app.schema/Store
               (:ring-state data)
-                Op :ring-state $ normalize-state $ decode-map-as data app.schema/StateValue
+                Op :ring-state $ normalize-state $ decode-map-as data RingPayload
               _ $ raise |unknown-color-ring-op
           :examples $ []
           :schema $ quote $ Fn AnyEnum (-> Op) (:open :decode)
@@ -351,10 +360,9 @@
           :code $ quote $ defn normalize-state (data)
             match data
               (RingState state) state
-              (Map fields) (decode-map-as fields 'app.schema/RingState)
-              _ $ raise |expected-ring-state
+              (Map fields) (decode-map-as fields RingState)
           :examples $ []
-          :schema $ quote $ Fn StateValue (-> RingState)
+          :schema $ quote $ Fn RingPayload (-> RingState)
         'resolve-color-space $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn resolve-color-space (format)
             match format
