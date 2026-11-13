@@ -332,7 +332,7 @@
                 Op :ring-state $ normalize-state $ decode-map-as data RingPayload
               _ $ raise |unknown-color-ring-op
           :examples $ []
-          :schema $ quote $ Fn AnyEnum (-> Op) (:open :decode)
+          :schema $ quote $ Fn Input (-> Op) (:generics Input)
           :tests $ []
             %{} 'TestEntry (:name |decodes-slider-and-drag-point-gestures)
               :code $ quote $ let
