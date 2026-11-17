@@ -10,9 +10,9 @@ based on `d3.hcl` funcition https://github.com/d3/d3-color#hcl .
 
 ### Development and deployment
 
-使用者影响：本项目使用正式 Calcit / `@calcit/procs` **0.42.1**、Node.js 24 和 Yarn 4.18.0。本地升级后请重新安装依赖并刷新页面。HCL、HSL、HSLuv 颜色算法、滑杆范围与步长、字体等待、颜色复制和前端部署路径沿用原有配置。内部颜色计算接收具名 `ColorSpace`，旧状态的格式 Tag 仍可读取，未知格式沿用 HCL 回退。
+使用者影响：本项目使用正式 Calcit / `@calcit/procs` **0.43.0**、Node.js 24 和 Yarn 4.18.0。本地升级后请重新安装依赖并刷新页面。HCL、HSL、HSLuv 颜色算法、滑杆范围与步长、字体等待、颜色复制和前端部署路径沿用原有配置。内部颜色计算接收具名 `ColorSpace`，旧状态的格式 Tag 仍可读取，未知格式沿用 HCL 回退。
 
-正式模块为 Phlox **0.9.3**、Touch Control **0.0.39**，传递依赖 JS FFI **0.2.13**、Pointed Prompt **0.0.27**。使用 Caps 严格安装已发布 tag。
+正式模块为 Phlox **0.9.6**、Touch Control **0.0.41**，传递依赖 JS FFI **0.2.18**、Pointed Prompt **0.0.28**。使用 Caps 严格安装已发布 tag。
 
 ```bash
 caps --strict --ci
@@ -35,7 +35,7 @@ yarn build
 
 `yarn build` 编译默认 JS 入口后打包一次；`yarn dev` 首次编译并启动 Vite，实时修改另开终端运行 `calcit calcit.cirru -w`。本地资源使用相对路径。CI 的生产 COS 前缀仍是 `worktools/color-ring/`，PR 预览按 PR/run/attempt 隔离，COS action v1.2.0 自身通过 `public-base-url` 校验上传，不加额外验证脚本。精确正式 action tag、原 main-only rsync 来源/目标及共享字体路径保持不变。发布前核对当前 main，过时排队任务跳过生产上传和 rsync；fork / Dependabot 仍跑原检查和构建，不获得上传凭据。仅处理前端 dist。
 
-原 JS `hud!` 继续在页面显示构建错误。项目没有附属测试，前端交互验收覆盖三种配色切换、点数 120→128 与刷新恢复初始 HCL/120。IAB 历史图形可见性差异见 [Phlox #71](https://github.com/Phlox-GL/phlox/issues/71)。
+原 JS `hud!` 继续在页面显示构建错误。项目有三项定义内测试，前端交互验收覆盖三种配色切换、点数 120→128 与刷新恢复初始 HCL/120。IAB 历史图形可见性差异见 [Phlox #71](https://github.com/Phlox-GL/phlox/issues/71)。
 
 ### Workflow
 
